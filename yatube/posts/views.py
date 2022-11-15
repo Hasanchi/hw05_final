@@ -1,6 +1,6 @@
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
 
 from .forms import PostForm, CommentForm
@@ -16,7 +16,7 @@ def function_paginator(request, posts):
     return page_obj
 
 
-@cache_page(20, key_prefix="index_page")
+@cache_page(20, key_prefix='index_page')
 def index(request):
     posts = Post.objects.all()
     page_obj = function_paginator(request, posts)
@@ -55,11 +55,7 @@ def profile(request, username):
 def post_detail(request, post_id):
     form = CommentForm(request.POST or None)
     comments = Comment.objects.filter(post=post_id)
-    posts = Post.objects.prefetch_related(
-        'author',
-        'group',
-        'comments'
-    ).get(id=post_id)
+    posts = get_object_or_404(Post, id=post_id)
     count = Post.objects.filter(author=posts.author.id).count()
     context = {
         'posts': posts,
@@ -136,8 +132,8 @@ def profile_follow(request, username):
     follow_check = Follow.objects.filter(
         user=request.user,
         author=author.id
-    ).count()
-    if follow_check == 0 and author.username != request.user.username:
+    ).exists()
+    if follow_check is False and author.username != request.user.username:
         Follow.objects.create(user=request.user, author=author)
     return redirect('posts:profile', username=username)
 

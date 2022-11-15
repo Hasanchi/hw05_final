@@ -1,11 +1,11 @@
-from django.core.cache import cache
+from django import forms
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
-from django import forms
 
-from ..models import Post, Group
+from ..models import Follow, Post, Group
 
 User = get_user_model()
 
@@ -221,13 +221,22 @@ class FollowViewsTest(TestCase):
         self.guest_client = Client()
 
     def test_following(self):
-        """Тест на отображение постов в follow_index не подписчика автора"""
-        response = self.not_follower_client.get(reverse('posts:follow_index'))
-        page_obj = response.context['page_obj']
-        self.assertEqual(len(page_obj), 0)
+        """Проверка на возможность подписать"""
+        self.follower_client.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.author.username}
+            )
+        )
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.follower,
+                author=self.author
+            ).exists()
+        )
 
-    def test_following_and_unfollowing(self):
-        """Проверка на возможность подписать и отписаться"""
+    def test_follow_index_following(self):
+        """Тест на отображение постов в follow_index подписчика автора"""
         self.follower_client.get(
             reverse(
                 'posts:profile_follow',
@@ -237,13 +246,25 @@ class FollowViewsTest(TestCase):
         response = self.follower_client.get(reverse('posts:follow_index'))
         page_obj = response.context['page_obj']
         self.assertEqual(len(page_obj), 1)
+
+    def test_unfollowing(self):
+        """Проверка на возможность отписаться"""
         self.follower_client.get(
             reverse(
                 'posts:profile_unfollow',
                 kwargs={'username': self.author.username}
             )
         )
-        response = self.follower_client.get(reverse('posts:follow_index'))
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.follower,
+                author=self.author
+            ).exists()
+        )
+
+    def test_follow_index_following(self):
+        """Тест на отображение постов в follow_index не подписчика автора"""
+        response = self.not_follower_client.get(reverse('posts:follow_index'))
         page_obj = response.context['page_obj']
         self.assertEqual(len(page_obj), 0)
 

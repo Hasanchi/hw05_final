@@ -1,12 +1,12 @@
 import shutil
 import tempfile
 
-from django.core.cache import cache
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from django.contrib.auth import get_user_model
 
 from ..forms import CommentForm, PostForm
 from ..models import Post, Group, Comment
@@ -170,6 +170,7 @@ class CommentPostCreateTest(TestCase):
         comment_count = Comment.objects.count()
         form_data = {
             'text': 'Тестовый текст',
+            'post': self.post,
         }
         response = self.authorized_client.post(
             reverse(
@@ -195,6 +196,10 @@ class CommentPostCreateTest(TestCase):
         self.assertEqual(
             comment.author,
             self.user
+        )
+        self.assertEqual(
+            comment.post.text,
+            'Тестовый текст'
         )
 
     def test_guest_client_add_comment(self):
