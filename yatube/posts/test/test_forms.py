@@ -170,7 +170,6 @@ class CommentPostCreateTest(TestCase):
         comment_count = Comment.objects.count()
         form_data = {
             'text': 'Тестовый текст',
-            'post': self.post,
         }
         response = self.authorized_client.post(
             reverse(
@@ -217,6 +216,6 @@ class CommentPostCreateTest(TestCase):
             data=form_data,
             follow=True
         )
-        redirect = '/auth/login/?next=/posts/1/comment/'
+        redirect = f'/auth/login/?next=/posts/{self.post.id}/comment/'
         self.assertRedirects(response, redirect)
         self.assertEqual(self.post.comments.count(), 0)

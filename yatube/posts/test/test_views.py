@@ -237,18 +237,19 @@ class FollowViewsTest(TestCase):
 
     def test_follow_index_following(self):
         """Тест на отображение постов в follow_index подписчика автора"""
-        self.follower_client.get(
-            reverse(
-                'posts:profile_follow',
-                kwargs={'username': self.author.username}
-            )
-        )
+        Follow.objects.create(user=self.follower, author=self.author)
         response = self.follower_client.get(reverse('posts:follow_index'))
         page_obj = response.context['page_obj']
         self.assertEqual(len(page_obj), 1)
 
     def test_unfollowing(self):
         """Проверка на возможность отписаться"""
+        self.follower_client.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.author.username}
+            )
+        )
         self.follower_client.get(
             reverse(
                 'posts:profile_unfollow',
@@ -269,7 +270,12 @@ class FollowViewsTest(TestCase):
         self.assertEqual(len(page_obj), 0)
 
     def test_redirect_guest_client(self):
-        response = self.guest_client.get('/profile/posts_author/follow/')
+        response = self.guest_client.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.author.username}
+            )
+        )
         self.assertRedirects(
             response,
             '/auth/login/?next=/profile/posts_author/follow/'
