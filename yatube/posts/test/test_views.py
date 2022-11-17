@@ -244,18 +244,8 @@ class FollowViewsTest(TestCase):
 
     def test_unfollowing(self):
         """Проверка на возможность отписаться"""
-        self.follower_client.get(
-            reverse(
-                'posts:profile_follow',
-                kwargs={'username': self.author.username}
-            )
-        )
-        self.follower_client.get(
-            reverse(
-                'posts:profile_unfollow',
-                kwargs={'username': self.author.username}
-            )
-        )
+        Follow.objects.create(user=self.follower, author=self.author)
+        Follow.objects.filter(user=self.follower, author=self.author).delete()
         self.assertFalse(
             Follow.objects.filter(
                 user=self.follower,
